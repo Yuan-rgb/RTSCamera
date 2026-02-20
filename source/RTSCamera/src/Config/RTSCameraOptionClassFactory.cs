@@ -133,6 +133,26 @@ namespace RTSCamera.Config
                             new SelectionItem(true, "str_rts_camera_follow_facing_direction_option", "ControlNewUnitOnly"),
                             new SelectionItem(true, "str_rts_camera_follow_facing_direction_option", "Always")
                         }), true));
+
+                // ── Cinematic Smooth Camera ───────────────────────────────────────────
+                cameraOptionCategory.AddOption(new BoolOptionViewModel(
+                    GameTexts.FindText("str_rts_camera_cinematic_smooth_enabled"),
+                    GameTexts.FindText("str_rts_camera_cinematic_smooth_enabled_hint"),
+                    () => RTSCameraConfig.Get().CinematicSmoothEnabled,
+                    b => RTSCameraConfig.Get().CinematicSmoothEnabled = b));
+
+                cameraOptionCategory.AddOption(new NumericOptionViewModel(
+                    GameTexts.FindText("str_rts_camera_cinematic_position_smooth"),
+                    GameTexts.FindText("str_rts_camera_cinematic_position_smooth_hint"),
+                    () => RTSCameraConfig.Get().CinematicPositionSmooth,
+                    f => RTSCameraConfig.Get().CinematicPositionSmooth = f, 10f, 60f, false, true));
+
+                cameraOptionCategory.AddOption(new NumericOptionViewModel(
+                    GameTexts.FindText("str_rts_camera_cinematic_rotation_smooth"),
+                    GameTexts.FindText("str_rts_camera_cinematic_rotation_smooth_hint"),
+                    () => RTSCameraConfig.Get().CinematicRotationSmooth,
+                    f => RTSCameraConfig.Get().CinematicRotationSmooth = f, 10f, 60f, false, true));
+                // ─────────────────────────────────────────────────────────────────────
                 optionClass.AddOptionCategory(0, cameraOptionCategory);
 
                 var controlOptionCategory = new OptionCategory("Control",

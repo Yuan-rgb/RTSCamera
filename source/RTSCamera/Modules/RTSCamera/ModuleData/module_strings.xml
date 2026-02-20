@@ -235,4 +235,10 @@
   <string id="str_rts_camera_control_troop_hotkey_hint" text="{=RTSCamera_control_troop_hotkey_hint}lock to agent/formation; control agent" />
   <string id="str_rts_camera_select_character_hotkey_hint" text="{=RTSCamera_select_character_hotkey_hint}select character mode" />
   <string id="str_rts_camera_move_camera_hotkey_hint" text="{=RTSCamera_move_camera_hotkey_hint}Move Camera" />
+  <string id="str_rts_camera_cinematic_smooth_enabled" text="{=RTSCamera_cinematic_smooth_enabled}Cinematic Camera Smoothing" />
+  <string id="str_rts_camera_cinematic_smooth_enabled_hint" text="{=RTSCamera_cinematic_smooth_enabled_hint}Enable cinematic smooth interpolation for camera position and rotation. Adds a natural lag to camera movement for a film-like feel." />
+  <string id="str_rts_camera_cinematic_position_smooth" text="{=RTSCamera_cinematic_position_smooth}Position Smoothing" />
+  <string id="str_rts_camera_cinematic_position_smooth_hint" text="{=RTSCamera_cinematic_position_smooth_hint}Camera position tracking speed. Lower = more lag / cinematic. Higher = snappier." />
+  <string id="str_rts_camera_cinematic_rotation_smooth" text="{=RTSCamera_cinematic_rotation_smooth}Rotation Smoothing" />
+  <string id="str_rts_camera_cinematic_rotation_smooth_hint" text="{=RTSCamera_cinematic_rotation_smooth_hint}Camera rotation tracking speed. Lower = softer pan. Higher = tighter follow." />
 </strings>

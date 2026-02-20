@@ -198,6 +198,13 @@ namespace RTSCamera.Config
 
         public bool IsCheatOptionVisible = true;
 
+        // --- Cinematic Smooth Camera ---
+        public bool CinematicSmoothEnabled = true;
+
+        public float CinematicPositionSmooth = 10f;
+
+        public float CinematicRotationSmooth = 10f;
+
         public static void OnMenuClosed()
         {
             Get().Serialize();

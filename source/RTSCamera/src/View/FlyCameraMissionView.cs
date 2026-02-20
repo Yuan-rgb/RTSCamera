@@ -462,7 +462,6 @@ namespace RTSCamera.View
                 _cameraSpeedMultiplier *= 0.8f;
             if (RTSCameraGameKeyCategory.GetKey(GameKeyEnum.ResetCameraSpeed).IsKeyPressedInOrder())
                 _cameraSpeedMultiplier = 1f;
-            _cameraSpeed *= (float)(1.0 - 10 * (double)dt);
             //if (MissionScreen.InputManager.IsControlDown())
             //{
             //    float num = MissionScreen.SceneLayer.Input.GetDeltaMouseScroll() * 0.008333334f;
@@ -474,7 +473,7 @@ namespace RTSCamera.View
             float cameraBasicSpeed = 3f * _cameraSpeedMultiplier * MovementSpeedFactor;
             if (MissionScreen.SceneLayer.Input.IsGameKeyDown(CombatHotKeyCategory.Zoom))
                 cameraBasicSpeed *= _shiftSpeedMultiplier;
-            if (!_cameraSmoothMode)
+            if (!_cameraSmoothMode && (_config == null || !_config.CinematicSmoothEnabled))
             {
                 _cameraSpeed.x = 0.0f;
                 _cameraSpeed.y = 0.0f;
@@ -482,70 +481,86 @@ namespace RTSCamera.View
             }
 
             bool hasVerticalInput = false;
-            //if (!MissionScreen.InputManager.IsControlDown() || !MissionScreen.InputManager.IsAltDown())
+            
+            float keyInputVertical = 0;
+            Vec2 keyInput = Vec2.Zero;
+            Vec2 mouseInput = Vec2.Zero;
+            if (RTSCameraGameKeyCategory.GetKey(GameKeyEnum.CameraMoveForward).IsKeyDown())
+                ++keyInput.y;
+            if (RTSCameraGameKeyCategory.GetKey(GameKeyEnum.CameraMoveBackward).IsKeyDown())
+                --keyInput.y;
+            if (RTSCameraGameKeyCategory.GetKey(GameKeyEnum.CameraMoveLeft).IsKeyDown())
+                --keyInput.x;
+            if (RTSCameraGameKeyCategory.GetKey(GameKeyEnum.CameraMoveRight).IsKeyDown())
+                ++keyInput.x;
+            if (RTSCameraGameKeyCategory.GetKey(GameKeyEnum.CameraMoveUp).IsKeyDown())
+                ++keyInputVertical;
+            if (RTSCameraGameKeyCategory.GetKey(GameKeyEnum.CameraMoveDown).IsKeyDown())
+                --keyInputVertical;
+
+            if (MissionScreen.MouseVisible && !MissionScreen.SceneLayer.Input.IsKeyDown(InputKey.RightMouseButton) && !RTSCameraGameKeyCategory.GetKey(GameKeyEnum.CameraMoveByMouse).IsKeyDown())
             {
-                float keyInputVertical = 0;
-                Vec2 keyInput = Vec2.Zero;
-                Vec2 mouseInput = Vec2.Zero;
-                if (RTSCameraGameKeyCategory.GetKey(GameKeyEnum.CameraMoveForward).IsKeyDown())
-                    ++keyInput.y;
-                if (RTSCameraGameKeyCategory.GetKey(GameKeyEnum.CameraMoveBackward).IsKeyDown())
-                    --keyInput.y;
-                if (RTSCameraGameKeyCategory.GetKey(GameKeyEnum.CameraMoveLeft).IsKeyDown())
-                    --keyInput.x;
-                if (RTSCameraGameKeyCategory.GetKey(GameKeyEnum.CameraMoveRight).IsKeyDown())
-                    ++keyInput.x;
-                if (RTSCameraGameKeyCategory.GetKey(GameKeyEnum.CameraMoveUp).IsKeyDown())
-                    ++keyInputVertical;
-                if (RTSCameraGameKeyCategory.GetKey(GameKeyEnum.CameraMoveDown).IsKeyDown())
-                    --keyInputVertical;
-
-                if (MissionScreen.MouseVisible && !MissionScreen.SceneLayer.Input.IsKeyDown(InputKey.RightMouseButton) && !RTSCameraGameKeyCategory.GetKey(GameKeyEnum.CameraMoveByMouse).IsKeyDown())
+                if (Mission.Mode != MissionMode.Conversation)
                 {
-                    if (Mission.Mode != MissionMode.Conversation)
-                    {
-                        float x = MissionScreen.SceneLayer.Input.GetMousePositionRanged().x;
-                        float y = MissionScreen.SceneLayer.Input.GetMousePositionRanged().y;
-                        if (x <= 0.01 && (y < 0.01 || y > 0.25))
-                            --mouseInput.x;
-                        else if (x >= 0.99 && (y < 0.01 || y > 0.25))
-                            ++mouseInput.x;
-                        if (y <= 0.01)
-                            ++mouseInput.y;
-                        else if (y >= 0.99)
-                            --mouseInput.y;
-                    }
+                    float x = MissionScreen.SceneLayer.Input.GetMousePositionRanged().x;
+                    float y = MissionScreen.SceneLayer.Input.GetMousePositionRanged().y;
+                    if (x <= 0.01 && (y < 0.01 || y > 0.25))
+                        --mouseInput.x;
+                    else if (x >= 0.99 && (y < 0.01 || y > 0.25))
+                        ++mouseInput.x;
+                    if (y <= 0.01)
+                        ++mouseInput.y;
+                    else if (y >= 0.99)
+                        --mouseInput.y;
                 }
-
-                if (mouseInput.LengthSquared > 0.0)
-                    mouseInput.Normalize();
-
-                if (!MissionScreen.MouseVisible && MissionScreen.SceneLayer.Input.GetIsControllerConnected())
-                {
-                    var x = MissionScreen.SceneLayer.Input.GetKeyState(InputKey.ControllerLStick).X;
-                    var y = MissionScreen.SceneLayer.Input.GetKeyState(InputKey.ControllerLStick).Y;
-                    if (MathF.Abs(x) < 0.2f)
-                        x = 0.0f;
-                    if (MathF.Abs(y) < 0.2f)
-                        y = 0.0f;
-                    keyInput.x += x;
-                    keyInput.y += y;
-                }
-                if (keyInput.LengthSquared > 0.0)
-                    keyInput.Normalize();
-
-                hasVerticalInput = keyInputVertical != 0 || TaleWorlds.InputSystem.Input.DeltaMouseScroll != 0;
-                if (keyInput + mouseInput != Vec2.Zero || keyInputVertical != 0)
-                {
-                    FocusOnFormation(null);
-                }
-                _cameraSpeed += ((keyInput + mouseInput) * cameraBasicSpeed * heightFactorForHorizontalMove).ToVec3(keyInputVertical * cameraBasicSpeed * heightFactorForVerticalMove);
             }
+
+            if (mouseInput.LengthSquared > 0.0)
+                mouseInput.Normalize();
+
+            if (!MissionScreen.MouseVisible && MissionScreen.SceneLayer.Input.GetIsControllerConnected())
+            {
+                var x = MissionScreen.SceneLayer.Input.GetKeyState(InputKey.ControllerLStick).X;
+                var y = MissionScreen.SceneLayer.Input.GetKeyState(InputKey.ControllerLStick).Y;
+                if (MathF.Abs(x) < 0.2f) x = 0.0f;
+                if (MathF.Abs(y) < 0.2f) y = 0.0f;
+                keyInput.x += x;
+                keyInput.y += y;
+            }
+            if (keyInput.LengthSquared > 0.0)
+                keyInput.Normalize();
+
+            hasVerticalInput = keyInputVertical != 0 || TaleWorlds.InputSystem.Input.DeltaMouseScroll != 0;
+            if (keyInput + mouseInput != Vec2.Zero || keyInputVertical != 0)
+                FocusOnFormation(null);
+
             float horizontalLimit = heightFactorForHorizontalMove * cameraBasicSpeed;
             float verticalLimit = heightFactorForVerticalMove * cameraBasicSpeed * VerticalMovementSpeedFactor;
-            _cameraSpeed.x = MBMath.ClampFloat(_cameraSpeed.x, -horizontalLimit, horizontalLimit);
-            _cameraSpeed.y = MBMath.ClampFloat(_cameraSpeed.y, -horizontalLimit, horizontalLimit);
-            _cameraSpeed.z = MBMath.ClampFloat(_cameraSpeed.z, -verticalLimit, verticalLimit);
+
+            // Target speed = input direction × limit (when input is zero, target is 0 — camera naturally coasts to a stop)
+            Vec3 targetSpeed = ((keyInput + mouseInput) * horizontalLimit).ToVec3(keyInputVertical * verticalLimit);
+
+            if (_config != null && _config.CinematicSmoothEnabled)
+            {
+                // posDecayBase controls inertia strength (low = coasts farther / slower to reverse, high = more immediate response)
+                // This single parameter simultaneously governs: coast distance, acceleration time, and direction-change smoothness
+                float posDecayBase = MBMath.ClampFloat(1f - _config.CinematicPositionSmooth / 20f, 0.03f, 0.97f);
+                float lerpAlpha = 1f - (float)Math.Pow(posDecayBase, dt);
+                _cameraSpeed.x = MBMath.Lerp(_cameraSpeed.x, targetSpeed.x, lerpAlpha);
+                _cameraSpeed.y = MBMath.Lerp(_cameraSpeed.y, targetSpeed.y, lerpAlpha);
+                _cameraSpeed.z = MBMath.Lerp(_cameraSpeed.z, targetSpeed.z, lerpAlpha);
+            }
+            else
+            {
+                // Restore the original decay — without this line, speed never returns to zero after releasing the key
+                _cameraSpeed *= (float)(1.0 - 10 * (double)dt);
+
+                // Original behaviour: accumulate each frame then clamp directly
+                _cameraSpeed += targetSpeed;
+                _cameraSpeed.x = MBMath.ClampFloat(_cameraSpeed.x, -horizontalLimit, horizontalLimit);
+                _cameraSpeed.y = MBMath.ClampFloat(_cameraSpeed.y, -horizontalLimit, horizontalLimit);
+                _cameraSpeed.z = MBMath.ClampFloat(_cameraSpeed.z, -verticalLimit, verticalLimit);
+            }
 
             if (_config.CameraHeightFollowsTerrain)
             {
@@ -834,7 +849,17 @@ namespace RTSCamera.View
             if (SmoothRotationMode)
             {
                 num4 *= 0.10f;
-                smoothFading = (float)Math.Pow(0.000001, dt);
+                if (_config != null && _config.CinematicSmoothEnabled)
+                {
+                    // Inertia decay: CinematicRotationSmooth: 1 (long coast) → 20 (quick stop)
+                    // Also produces smooth acceleration: slow decay → delta takes multiple frames to build up to its peak value
+                    float rotDecayBase = MBMath.ClampFloat(1f - _config.CinematicRotationSmooth / 20f, 0.03f, 0.97f);
+                    smoothFading = (float)Math.Pow(rotDecayBase, dt);
+                }
+                else
+                {
+                    smoothFading = (float)Math.Pow(0.000001, dt);
+                }
             }
             else
                 smoothFading = 0.0f;
@@ -842,8 +867,15 @@ namespace RTSCamera.View
             _cameraElevationDelta *= smoothFading;
             bool isSessionActive = GameNetwork.IsSessionActive;
             float inputScale = num4 * mouseSensitivity * MissionScreen.CameraViewAngle;
-            float inputX = -inputXRaw * inputScale;
-            float inputY = (NativeConfig.InvertMouse ? inputYRaw : -inputYRaw) * inputScale;
+            // Compensation factor: keeps steady-state rotation speed consistent with the original behaviour, regardless of how slow smoothFading is
+            // Original steady-state: inputX / (1 - originalFading)
+            // New steady-state:      inputX * compensation / (1 - newFading)
+            // Setting them equal → compensation = (1 - newFading) / (1 - originalFading)
+            float originalFading = (float)Math.Pow(0.000001, dt); // Original decay factor, ~0.79 @ 60 fps
+            float rotationCompensation = (1f - smoothFading) / (1f - originalFading);
+
+            float inputX = -inputXRaw * inputScale * rotationCompensation;
+            float inputY = (NativeConfig.InvertMouse ? inputYRaw : -inputYRaw) * inputScale * rotationCompensation;
             if (isSessionActive)
             {
                 float maxValue = (float)(0.300000011920929 + 10.0 * dt);
